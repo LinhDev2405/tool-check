@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>URL Linh Checker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <div class="checker-container">
+        <h2><i class="bi bi-globe2"></i> URL Linh Checker</h2>
+        <form id="form" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label"><i class="bi bi-file-earmark-text"></i> Chọn file URL (.txt):</label>
+                <input type="file" name="txt_file" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">🚀 Kiểm tra URL</button>
+        </form>
+
+        <div id="log-box" style="max-height:400px; overflow-y:auto; margin-top:15px;"></div>
+
+        <a id="download-btn" class="btn btn-success w-100 mt-3 btn-download" href="/download" style="display:none;">
+            <i class="bi bi-download"></i> Tải Excel
+        </a>
+    </div>
+
+    <script>
+        let logInterval = null;
+
+        function startLogInterval() {
+            if (logInterval) return;
+            logInterval = setInterval(fetchLogs, 1000);
+        }
+
+        function stopLogInterval() {
+            if (logInterval) {
+                clearInterval(logInterval);
+                logInterval = null;
+            }
+        }
+
+        function fetchLogs() {
+            $.get("/logs", function (data) {
+                $('#log-box').html(data.join(''));  // hiển thị nguyên HTML
+                $('#log-box').scrollTop($('#log-box')[0].scrollHeight);
+
+                if (data.length > 0 && data[data.length - 1].includes("Hoàn tất!")) {
+                    $('#download-btn').show();
+                    stopLogInterval();
+                }
+            });
+        }
+
+        // submit file bằng AJAX
+        $('#form').on('submit', function (e) {
+            e.preventDefault();
+
+            $('#download-btn').hide();
+            $('#log-box').html('');
+
+            const formData = new FormData(this);
+            $.ajax({
+                url: '/',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function () {
+                    startLogInterval();
+                },
+                error: function () {
+                    alert('Có lỗi khi upload file.');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
