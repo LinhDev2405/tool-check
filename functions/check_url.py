@@ -1,7 +1,6 @@
-import pandas as pd
 import requests
 import random
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill, Alignment, Font
 
 KEYWORDS = [
@@ -57,14 +56,22 @@ def check_url(url):
         return url, None, f"Lỗi kết nối: {e}"
 
 def generate_excel(results, output_path):
-    df = pd.DataFrame(results, columns=["URL", "Trạng thái", "Ghi chú"])
-    df.to_excel(output_path, index=False)
-    format_excel(output_path)
-
-def format_excel(path):
-    wb = load_workbook(path)
+    wb = Workbook()
     ws = wb.active
+    ws.title = "Kết quả"
 
+    # Header
+    headers = ["URL", "Trạng thái", "Ghi chú"]
+    ws.append(headers)
+
+    # Nội dung
+    for r in results:
+        ws.append(r)
+
+    format_excel(ws)
+    wb.save(output_path)
+
+def format_excel(ws):
     ws.column_dimensions["A"].width = 90
     ws.column_dimensions["B"].width = 15
     ws.column_dimensions["C"].width = 50
@@ -97,5 +104,3 @@ def format_excel(path):
 
         else:
             status_cell.fill = yellow
-
-    wb.save(path)
